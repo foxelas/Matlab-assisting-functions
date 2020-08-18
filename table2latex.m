@@ -16,7 +16,7 @@ function Ttex = table2latex(T, selectedCols)
 %     Ttex = table2latex(T, [1:5]);
 %     The function prints the formatted table, which then
 %     can be copied and pasted to LaTeX as is. 
-
+%     Created by https://github.com/foxelas/ (2020)
 
 v = table2cell(T);
 rows = size(v, 1);
