@@ -38,11 +38,13 @@ for ii = 1:columns
 end
 textRows{2} = strcat(textRows{2},  '}', slant, 'hline');
 
+textRows{3} = strcat(strjoin(cellfun(@(x) convertCell(x), T.Properties.VariableNames(selectedCols),  'UniformOutput', false), symb), slant, slant, slant, 'hline'); 
+
 for ii = 1:rows
-    textRows{ii + 2} = strcat(strjoin(cellfun(@(x) convertCell(x), v(ii,selectedCols),  'UniformOutput', false), symb), slant, slant, slant, 'hline');
+    textRows{ii + 3} = strcat(strjoin(cellfun(@(x) convertCell(x), v(ii,selectedCols),  'UniformOutput', false), symb), slant, slant, slant, 'hline');
 end
 
-textRows{rows+3} = strcat(slant, 'end{tabular}\n}\n', slant, 'end{center}\n', slant, 'end{table}', '\n');
+textRows{rows+4} = strcat(slant, 'end{tabular}\n}\n', slant, 'end{center}\n', slant, 'end{table}', '\n');
 
 Ttex = strjoin(textRows, '\n');
 fprintf(Ttex);
