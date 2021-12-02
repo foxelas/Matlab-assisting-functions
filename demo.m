@@ -4,7 +4,7 @@ clc;
 folderName = 'demo/';
 
 infile = strcat(folderName, 'demoVals.xlsx');
-T = readtable(infile,'Sheet', 'Test');
+T = readtable(infile,'Sheet', 'Test', 'VariableNamingRule', 'preserve');
 % T = removevars(T, 'Limits');
 
 tabname = 'test-table';
