@@ -29,7 +29,7 @@ end
 
 rows = size(v, 1);
 
-if nargin < 2
+if nargin < 2 || isempty(selectedCols)
     columns = size(v, 2);
     selectedCols = 1:columns;
 else
@@ -75,12 +75,21 @@ fprintf(Ttex);
 end
 
 function xnew = convertCell(x)
-if ischar(x)
+if ischar(x) && ~isnan(str2double(x))
+    xnew = num2str(str2double(x) * 100, '%.2f');
+    xnew = strcat(xnew, '\\%%');
+        
+elseif ischar(x)
     xnew = strrep(x, '%', '\\%%'); 
     xnew = strrep(xnew, '&', '\\&');
     xnew = strrep(xnew, '_', '\\_');
+    xnew = strrep(xnew, '\cite', '\\cite');
 elseif isnumeric(x)
-    xnew = num2str(x, '%.3f');
+    if floor(x)==x
+        xnew = num2str(x, '%d');
+    else
+        xnew = num2str(x, '%.3f');
+    end
 elseif islogical(x)
     logVals = {'F', 'T'};
     xnew = logVals{x+1};

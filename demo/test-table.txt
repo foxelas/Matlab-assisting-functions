@@ -1,0 +1,15 @@
+\begin{table}[htb]
+\caption{List of Eligible Studies}
+\begin{center}
+\label{tab:test-table}
+{\tt
+\begin{tabular}{|c|c|c|}\hline
+Type & Values & Limits\\\hline
+1 & 0.850 & bad\\\hline
+2 & 0.980 & good\\\hline
+3 & 0.092 & ugly\\\hline
+\end{tabular}
+}
+\end{center}
+\end{table}
+
