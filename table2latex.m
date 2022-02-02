@@ -1,4 +1,4 @@
-function Ttex = table2latex(T, selectedCols, label, caption, colWidths, isLandscape, notes)
+function Ttex = table2latex(T, selectedCols, label, caption, colWidths, isLandscape, notes, isAfterpage)
 %     table2latex converts a table to the tabular form for use in LaTeX.
 %
 %     Input args
@@ -64,6 +64,10 @@ if nargin < 7
     notes = [];
 end 
 
+if nargin < 8
+    isAfterpage = false;
+end 
+
 hasNotes = ~isempty(notes);
 
 symb = ' & ';
@@ -71,10 +75,16 @@ slant = '\\';
 textRows = cell(2+rows+1, 1);
 curRows = 1;
 
-if isLandscape 
-    textRows{curRows} = strcat(slant, 'afterpage{\n\n', slant,'begin{landscape}\n');
+if isAfterpage 
+    textRows{curRows} = strcat(slant, 'afterpage{\n\n');
     curRows = curRows + 1;
 end 
+
+if isLandscape 
+    textRows{curRows} = strcat(slant, 'begin{landscape}\n');
+    curRows = curRows + 1;
+end 
+
 strParts = {slant, 'begin{table}[htb]\n', slant, 'caption{', caption, '}\n', slant, 'begin{center}\n', slant, 'label{tab:', label, '}\n{', slant, 'tt'};
 if hasNotes 
     strParts = {slant, 'begin{table}[htb]\n', slant, 'begin{threeparttable}\n', slant, 'caption{', caption, '}\n', slant, 'begin{center}\n', slant, 'label{tab:', label, '}\n{', slant, 'tt'};
@@ -100,7 +110,7 @@ textRows{curRows} = strcat(textRows{curRows}, '}', slant, 'hline');
 
 if hasHeader
     curRows = curRows + 1;
-    textRows{curRows} = strcat(strjoin(cellfun(@(x) convertCell(x, hasHeader), T.Properties.VariableNames(selectedCols),...
+    textRows{curRows} = strcat(strjoin(cellfun(@(x) convertCell(strrep(x, '_1', ''), hasHeader), T.Properties.VariableNames(selectedCols),...
         'UniformOutput', false), symb), slant, slant, slant, 'hline');
 end
 
@@ -144,7 +154,12 @@ end
 
 if isLandscape 
     curRows = curRows + 1;
-    textRows{curRows} = strcat(slant, 'end{landscape}\n', '\n}');
+    textRows{curRows} = strcat(slant, 'end{landscape}\n');
+end 
+
+if isAfterpage 
+    curRows = curRows + 1;
+    textRows{curRows} = '\n}';
 end 
 
 Ttex = strjoin(textRows, '\n');
@@ -159,8 +174,11 @@ end
 if ~isempty(x) && ~strcmp(x, '')
     if strcmpi(x, 'na') | isnan(x)
         xnew = 'N/A';
+    elseif  (isnumeric(x) & x <=1)
+         xnew = num2str(x * 100, '%.1f');
+        xnew = strcat(xnew, '\\%%')   
         
-    elseif ischar(x) && ~isnan(str2double(x))
+    elseif (ischar(x) && ~isnan(str2double(x)))
         xnew = num2str(str2double(x) * 100, '%.2f');
         xnew = strcat(xnew, '\\%%');
 
