@@ -1,22 +1,26 @@
-function Ttex = table2latex(T, selectedCols, label, caption, colWidths, isLandscape, notes, isAfterpage)
+function Ttex = table2latex(T, label, caption, options)
 %     table2latex converts a table to the tabular form for use in LaTeX.
 %
-%     Input args
+%     Input arguments
 %     T: a table of elements
-%     selectedCols: index vector of table columns that need to be
-%     printed. Default: All columns.
 %     label: the label for references to the table. Default: Empty.
 %     caption: the caption of the table. Default: Empty. 
-%     colWidths: the widths for each column. Default: Equally adjusted
+%     
+%	  Name Value Pair Arguments 
+%     SelectedColumns: index vector of table columns that need to be
+%     printed. Default: All columns.
+%     ColumnWidths: the widths for each column. Default: Equally adjusted
 %     width.
-%     isLandscape: flag to rotate table to landscape mode. Default:
+%     IsLandscape: flag to rotate table to landscape mode. Default:
 %     Vertical mode.
-%     notes: a cell array of additional notes after the table. Default: Not
+%     Notes: a cell array of additional notes after the table. Default: Not
 %     used. 
-%     isAfterpage: flag to execute commands after pagebreak. Default: no
+%     IsAfterpage: flag to execute commands after pagebreak. Default: no
 %     afterpage.
+%     Style: the style of the output table, chooese between 
+%	  {"minimal", "caged"}. Default: "minimal"
 %
-%     Output args
+%     Output arguments
 %     Ttex: the formatted text for the table
 %
 %     Dependencies
@@ -26,20 +30,30 @@ function Ttex = table2latex(T, selectedCols, label, caption, colWidths, isLandsc
 %     \usepackage{afterpage}
 %     \usepackage{pdflscape} %rotates page
 %
-%     LaTeX requirements for table notes:
-%     \usepackage[flushleft]{threeparttable}
-%     
-%
 %     Usage
 %     Ttex = table2latex(T);
-%     Ttex = table2latex(T, [1:5]);
-%     Ttex = table2latex(T, [], 'tab:table1', 'Experimental Values', [], false, {'These are example values.'}, false);
+%     Ttex = table2latex(T, 'tab:table1', 'Experimental Values');
+%     Ttex = table2latex(T, 'tab:table1', 'Experimental Values', ...
+%		'SelectedColumns', [1:5], 'IsLandscape', false, 'Style', 'caged', ...
+%       'Notes', {'These are example values.'});
 % 
 %     The function prints the formatted table, which then
 %     can be copied and pasted to LaTeX as is.
 %
 %
 %     Created by foxelas [https://github.com/foxelas/] (2020)
+
+arguments
+    T 
+    label char = ''
+    caption char = ''
+    options.SelectedColumns = []
+    options.ColumnWidths = []
+    options.IsLandscape logical = false
+    options.Notes = {}
+    options.IsAfterpage logical = false
+    options.Style string {mustBeMember(options.Style,["caged","minimal"])} = "minimal"
+end
 
 hasHeader = istable(T);
 if hasHeader
@@ -52,6 +66,7 @@ end
 
 rows = size(v, 1);
 
+selectedCols = options.SelectedColumns;
 if nargin < 2 || isempty(selectedCols)
     columns = size(v, 2);
     selectedCols = 1:columns;
@@ -59,34 +74,31 @@ else
     columns = numel(selectedCols);
 end
 
-if nargin < 3
-    label = '';
-end
-
-if nargin < 4
-    caption = '';
-end
-
-if nargin < 5 
-    colWidths = [];
-end
-
-if nargin < 6 
-    isLandscape = false;
-end
-
-if nargin < 7 
-    notes = [];
-end 
-
-if nargin < 8
-    isAfterpage = false;
-end 
-
-hasNotes = ~isempty(notes);
+colWidths = options.ColumnWidths;
+isLandscape = options.IsLandscape;
+notes = options.Notes; 
+isAfterpage = options.IsAfterpage;
 
 symb = ' & ';
 slant = '\\';
+
+if strcmpi(options.Style, "minimal")
+    titleSep = strcat(slant, 'hline');
+    bodySep =  '';
+    columnSep = '';
+elseif strcmpi(options.Style, "caged")
+    titleSep = strcat(slant, 'hline');
+    bodySep =  strcat(slant, 'hline');
+    columnSep = '|';
+else
+    titleSep = strcat(slant, 'hline');
+    bodySep =  strcat(slant, 'hline');
+    columnSep = '|';
+end
+
+hasNotes = ~isempty(notes);
+
+
 textRows = cell(2+rows+1, 1);
 curRows = 1;
 
@@ -100,14 +112,11 @@ if isLandscape
     curRows = curRows + 1;
 end 
 
-strParts = {slant, 'begin{table}[htb]\n', slant, 'caption{', caption, '}\n', slant, 'begin{center}\n', slant, 'label{tab:', label, '}\n{', slant, 'tt'};
-if hasNotes 
-    strParts = {slant, 'begin{table}[htb]\n', slant, 'begin{threeparttable}\n', slant, 'caption{', caption, '}\n', slant, 'begin{center}\n', slant, 'label{tab:', label, '}\n{', slant, 'tt'};
-end 
+strParts = {slant, 'begin{table}[htb]\n', slant, 'caption{', caption, '}\n', slant, 'begin{center}\n', slant, 'label{tab:', label, '}\n{', slant, 'tt', '\n'};
     
 textRows{curRows} = strcat(strParts{:});
 curRows = curRows + 1; 
-textRows{curRows} = strcat(slant, 'begin{tabular}{|');
+textRows{curRows} = strcat(slant, 'begin{tabular}{', columnSep);
 
 
 if length(colWidths) ~= columns
@@ -116,17 +125,17 @@ end
 
 for ii = 1:columns
     if isempty(colWidths)
-        textRows{curRows} = strcat(textRows{curRows}, 'c|');
+        textRows{curRows} = strcat(textRows{curRows}, 'c', columnSep);
     else
-        textRows{curRows} = strcat(textRows{curRows}, 'p{', num2str(colWidths(ii)), 'cm}|');
+        textRows{curRows} = strcat(textRows{curRows}, 'p{', num2str(colWidths(ii)), 'cm}', columnSep);
     end
 end
-textRows{curRows} = strcat(textRows{curRows}, '}', slant, 'hline');
+textRows{curRows} = strcat(textRows{curRows}, '}', titleSep);
 
 if hasHeader
     curRows = curRows + 1;
     textRows{curRows} = strcat(strjoin(cellfun(@(x) convertCell(strrep(x, '_1', ''), hasHeader), T.Properties.VariableNames(selectedCols),...
-        'UniformOutput', false), symb), slant, slant, slant, 'hline');
+        'UniformOutput', false), symb), slant, slant, titleSep);
 end
 
 hasExtraHeader = false; 
@@ -136,14 +145,14 @@ for ii = 1:rows
         hasExtraHeader = true; 
         textRows{curRows} = '';
     elseif hasExtraHeader
-        textRows{curRows} = strcat(slant, 'hline');
+        textRows{curRows} = titleSep;
         curRows = curRows + 1;
-        textRows{curRows} = strcat(strjoin(cellfun(@(x) convertCell(x, true), v(ii, selectedCols), 'UniformOutput', false), symb), slant, slant, slant, 'hline');
+        textRows{curRows} = strcat(strjoin(cellfun(@(x) convertCell(x, true), v(ii, selectedCols), 'UniformOutput', false), symb), slant, slant, bodySep);
         curRows = curRows + 1;
-        textRows{curRows} = strcat(slant, 'hline');
+        textRows{curRows} = titleSep;
         hasExtraHeader = false;
     else
-        textRows{curRows} = strcat(strjoin(cellfun(@(x) convertCell(x), v(ii, selectedCols), 'UniformOutput', false), symb), slant, slant, slant, 'hline');
+        textRows{curRows} = strcat(strjoin(cellfun(@(x) convertCell(x), v(ii, selectedCols), 'UniformOutput', false), symb), slant, slant, bodySep);
     end
 end
 
@@ -151,17 +160,18 @@ curRows = curRows + 1;
 if hasNotes 
     strParts = {slant, 'end{tabular}\n}\n', slant, 'end{center}\n'};
     textRows{curRows} = strcat(strParts{:});
-    strParts = {slant, 'begin{tablenotes}\n', slant, 'small\n'};
-    curRows = curRows + 1;
-    textRows{curRows} = strcat(strParts{:});
     for j = 1:numel(notes)
         curRows = curRows + 1;
-        strParts = {slant,  strjoin({'item', notes{j}}, {' '}), '\n'};
+        if j ~= numel(notes)
+            strParts = {notes{j}, slant, slant '\n'};
+        else
+            strParts = {notes{j}, '\n'};
+        end
         textRows{curRows} = strcat(strParts{:});
-    end
-    strParts =  {slant, 'end{tablenotes}\n', slant, 'end{threeparttable}\n', slant, 'end{table}', '\n\n'};
+    end 
+    strParts = {slant, 'end{table}', '\n\n'};
     curRows = curRows + 1;
-    textRows{curRows} = strcat(strParts{:});  
+    textRows{curRows} = strcat(strParts{:});
 else 
     strParts = {slant, 'end{tabular}\n}\n', slant, 'end{center}\n', slant, 'end{table}', '\n\n'};
     textRows{curRows} = strcat(strParts{:});
@@ -177,7 +187,7 @@ if isAfterpage
     textRows{curRows} = '\n}';
 end 
 
-Ttex = strjoin(textRows, '\n');
+Ttex = strjoin(textRows,'\n');
 fprintf(Ttex);
 
 end
