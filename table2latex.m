@@ -3,7 +3,18 @@ function Ttex = table2latex(T, selectedCols, label, caption, colWidths, isLandsc
 %
 %     Input args
 %     T: a table of elements
-%     selectedCols: index vector of table columns that need to be printed
+%     selectedCols: index vector of table columns that need to be
+%     printed. Default: All columns.
+%     label: the label for references to the table. Default: Empty.
+%     caption: the caption of the table. Default: Empty. 
+%     colWidths: the widths for each column. Default: Equally adjusted
+%     width.
+%     isLandscape: flag to rotate table to landscape mode. Default:
+%     Vertical mode.
+%     notes: a cell array of additional notes after the table. Default: Not
+%     used. 
+%     isAfterpage: flag to execute commands after pagebreak. Default: no
+%     afterpage.
 %
 %     Output args
 %     Ttex: the formatted text for the table
@@ -22,9 +33,13 @@ function Ttex = table2latex(T, selectedCols, label, caption, colWidths, isLandsc
 %     Usage
 %     Ttex = table2latex(T);
 %     Ttex = table2latex(T, [1:5]);
+%     Ttex = table2latex(T, [], 'tab:table1', 'Experimental Values', [], false, {'These are example values.'}, false);
+% 
 %     The function prints the formatted table, which then
 %     can be copied and pasted to LaTeX as is.
-%     Created by https://github.com/foxelas/ (2020)
+%
+%
+%     Created by foxelas [https://github.com/foxelas/] (2020)
 
 hasHeader = istable(T);
 if hasHeader
@@ -176,7 +191,7 @@ if ~isempty(x) && ~strcmp(x, '')
         xnew = 'N/A';
     elseif  (isnumeric(x) & x <=1)
          xnew = num2str(x * 100, '%.1f');
-        xnew = strcat(xnew, '\\%%')   
+        xnew = strcat(xnew, '\\%%');   
         
     elseif (ischar(x) && ~isnan(str2double(x)))
         xnew = num2str(str2double(x) * 100, '%.2f');
