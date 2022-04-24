@@ -189,7 +189,7 @@ end
 if ~isempty(x) && ~strcmp(x, '')
     if strcmpi(x, 'na') | isnan(x)
         xnew = 'N/A';
-    elseif  (isnumeric(x) & x <=1)
+    elseif  (isnumeric(x) & (x <1))
          xnew = num2str(x * 100, '%.1f');
         xnew = strcat(xnew, '\\%%');   
         
